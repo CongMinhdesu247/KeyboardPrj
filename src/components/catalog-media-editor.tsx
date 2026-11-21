@@ -5,7 +5,15 @@ import { changeCatalogMedia } from "@/app/admin/catalog/media-actions";
 import { catalogAssetUrl, type CatalogMedia } from "@/lib/catalog-media";
 import { ShopImage } from "./shop-image";
 
-export function CatalogMediaEditor({ initial, backendUrl }: { initial: CatalogMedia; backendUrl: string }) {
+export function CatalogMediaEditor({
+  initial,
+  backendUrl,
+  onMediaChange,
+}: {
+  initial: CatalogMedia;
+  backendUrl: string;
+  onMediaChange?: (media: CatalogMedia) => void;
+}) {
   const router = useRouter();
   const [saved, setSaved] = useState<CatalogMedia>();
   const [pending, setPending] = useState(false);
@@ -24,7 +32,7 @@ export function CatalogMediaEditor({ initial, backendUrl }: { initial: CatalogMe
       if (value) form.set("images", JSON.stringify(value));
       if (operation === "video-url") form.set("videoUrl",link);
       const result = await changeCatalogMedia(form);
-      if (result.media) setSaved(result.media);
+      if (result.media) { setSaved(result.media); onMediaChange?.(result.media); }
       setMessage(result.message);
       if (result.ok) {
         if (operation === "video-url" || operation === "remove-video") setLink(result.media?.videoUrl ?? "");
@@ -43,7 +51,7 @@ export function CatalogMediaEditor({ initial, backendUrl }: { initial: CatalogMe
         setMessage(`Đang tải ${kind === "image" ? "ảnh" : "video"} ${completed + 1}/${files.length}…`);
         const form = request(media, kind); form.set("file", file);
         const result = await changeCatalogMedia(form);
-        if (result.media) { media = result.media; setSaved(media); }
+        if (result.media) { media = result.media; setSaved(media); onMediaChange?.(media); }
         if (!result.ok) { setMessage(`${completed ? `Đã tải ${completed}/${files.length} file. ` : ""}${result.message}`); return; }
         completed++;
       }

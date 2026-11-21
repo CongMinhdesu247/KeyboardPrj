@@ -15,6 +15,7 @@ import { AdminTabs } from "@/components/admin-tabs";
 import { formatDate } from "@/lib/tracking";
 import { renderBankPayment } from "@/lib/bank-payment";
 import { BankTransferPanel } from "@/components/bank-transfer-panel";
+import { VndInput } from "@/components/vnd-input";
 export default async function OrderPage({
   params,
 }: {
@@ -290,10 +291,9 @@ export default async function OrderPage({
                         >
                           <label>
                             Số tiền (VND)
-                            <input
-                              type="number"
+                            <VndInput
                               name="amount"
-                              min="1"
+                              min={1}
                               max={o.total_vnd - net}
                               defaultValue={
                                 net
@@ -348,10 +348,9 @@ export default async function OrderPage({
                         <input type="hidden" name="method" value="bank" />
                         <label>
                           Số tiền hoàn
-                          <input
-                            type="number"
+                          <VndInput
                             name="amount"
-                            min="1"
+                            min={1}
                             max={net - o.deposit_vnd}
                             defaultValue={net - o.deposit_vnd}
                             required

@@ -9,9 +9,14 @@ import {
 import { lubePackages } from "@/lib/catalog-input";
 import type { CatalogFormState } from "@/lib/catalog-input";
 import type { AdminCatalogItem } from "@/lib/catalog-data";
-import { catalogAssetUrl, catalogMediaFromRow } from "@/lib/catalog-media";
+import {
+  catalogAssetUrl,
+  catalogMediaFromRow,
+  type CatalogMedia,
+} from "@/lib/catalog-media";
 import { BannerCrop } from "./banner-crop";
 import { CatalogMediaEditor } from "./catalog-media-editor";
+import { VndInput } from "./vnd-input";
 const initial: CatalogFormState = { message: "" };
 const labels = [
   ["keyboard", "Bàn phím"],
@@ -35,16 +40,28 @@ export function CatalogEditor({
   const [type, setType] = useState(item?.type ?? "product");
   const [category, setCategory] = useState(item?.category_slug ?? "lube");
   const [unit, setUnit] = useState(item?.unit ?? "gói");
-  const currentVersion =
-    state.media && state.media.version >= (item?.version ?? 1)
-      ? state.media.version
-      : (item?.version ?? 1);
-  const currentImageUrl =
-    state.media && state.media.version >= (item?.version ?? 1)
-      ? state.media.images[0]
-        ? catalogAssetUrl(backendUrl, "catalog-images", state.media.images[0])
-        : undefined
-      : imageUrl;
+  const [syncedMedia, setSyncedMedia] = useState<CatalogMedia>();
+  const [removeImageVersion, setRemoveImageVersion] = useState<number | null>(
+    null,
+  );
+  const [cropReset, setCropReset] = useState(0);
+  const itemMedia = item ? catalogMediaFromRow(item) : undefined;
+  const currentMedia = [itemMedia, state.media, syncedMedia].reduce<
+    CatalogMedia | undefined
+  >(
+    (latest, candidate) =>
+      candidate && (!latest || candidate.version >= latest.version)
+        ? candidate
+        : latest,
+    undefined,
+  );
+  const currentVersion = currentMedia?.version ?? item?.version ?? 1;
+  const currentImageUrl = currentMedia
+    ? currentMedia.images[0]
+      ? catalogAssetUrl(backendUrl, "catalog-images", currentMedia.images[0])
+      : undefined
+    : imageUrl;
+  const removeImageChecked = removeImageVersion === currentVersion;
   const [draft, setDraft] = useState({
     name: item?.name ?? "",
     description: item?.description ?? "",
@@ -141,29 +158,25 @@ export function CatalogEditor({
       </label>
       <label>
         Giá bán (VND)
-        <input
+        <VndInput
           name="price"
           aria-label="Giá bán (VND)"
-          type="number"
           min={0}
           max={1000000000}
-          step={1}
           value={draft.price}
-          onChange={(e) => setDraft({ ...draft, price: e.target.value })}
+          onValueChange={(price) => setDraft({ ...draft, price })}
         />
         <small>Để trống khi chưa có giá, mục chỉ lưu nháp.</small>
       </label>
       <label>
         Giá vốn linh kiện (VND)
-        <input
+        <VndInput
           name="cost"
           aria-label="Giá vốn linh kiện (VND)"
-          type="number"
           min={0}
           max={1000000000}
-          step={1}
           value={draft.cost}
-          onChange={(e) => setDraft({ ...draft, cost: e.target.value })}
+          onValueChange={(cost) => setDraft({ ...draft, cost })}
         />
         <small>Chỉ admin xem. Chưa tính lợi nhuận.</small>
       </label>
@@ -179,21 +192,39 @@ export function CatalogEditor({
       </label>
       <div className="span-two">
         <BannerCrop
-          key={`${state.catalogId ?? item?.id ?? "new"}-${state.media?.version ?? item?.version ?? 0}`}
+          key={`${state.catalogId ?? item?.id ?? "new"}-${currentVersion}-${cropReset}`}
           existing={currentImageUrl}
+          aspect={1}
           label="Ảnh công khai của sản phẩm"
           subject="ảnh sản phẩm"
-          hint="Đây là ảnh bìa; chọn ảnh rồi kéo để căn vùng hiển thị (khung 3:2, JPEG/PNG/WebP tĩnh, tối đa 5 MB và 20 MP). Thêm các góc chụp và video tại phần Ảnh & sound test sau khi lưu mục mới."
+          hint="Đây là ảnh bìa; chọn ảnh rồi kéo để căn vùng hiển thị (khung vuông 1:1, JPEG/PNG/WebP tĩnh, tối đa 5 MB và 20 MP). Thêm các góc chụp và video tại phần Ảnh & sound test sau khi lưu mục mới."
           saveHint="Ảnh chỉ được cắt khi bấm lưu sản phẩm. Có thể dùng các thanh chỉnh bằng bàn phím."
+          onSelectChange={(hasSelection) => {
+            if (hasSelection) setRemoveImageVersion(null);
+          }}
         />
         {currentImageUrl && (
           <div className="catalog-preview">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={currentImageUrl} alt={item?.name ?? "Ảnh hiện tại"} />
-            <label className="check-label">
-              <input type="checkbox" name="removeImage" />
-              Gỡ ảnh hiện tại
-            </label>
+            {item && (
+              <label className="check-label">
+                <input
+                  type="checkbox"
+                  name="removeImage"
+                  checked={removeImageChecked}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setRemoveImageVersion(currentVersion);
+                      setCropReset((count) => count + 1);
+                    } else {
+                      setRemoveImageVersion(null);
+                    }
+                  }}
+                />
+                Gỡ ảnh hiện tại
+              </label>
+            )}
           </div>
         )}
       </div>
@@ -230,7 +261,7 @@ export function CatalogEditor({
         {state.message}
       </p>
     </form>
-    {(item || state.media) ? <CatalogMediaEditor initial={item ? catalogMediaFromRow(item) : state.media!} backendUrl={backendUrl} /> : <p className="catalog-media-start">Lưu mục mới để bắt đầu thêm thư viện ảnh và video sound test.</p>}
+    {currentMedia ? <CatalogMediaEditor initial={currentMedia} backendUrl={backendUrl} onMediaChange={setSyncedMedia} /> : <p className="catalog-media-start">Lưu mục mới để bắt đầu thêm thư viện ảnh và video sound test.</p>}
     {state.catalogId && !item && <Link className="button button-outline" href={`/admin/catalog/${state.catalogId}`}>Chỉnh sửa thông tin sản phẩm vừa tạo</Link>}
     </>
   );

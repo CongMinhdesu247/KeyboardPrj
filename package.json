@@ -13,6 +13,7 @@
     "backup:verify": "node scripts/backup-local.mjs verify",
     "test:m7-local": "node scripts/run-local-regression.mjs",
     "test:container": "node scripts/verify-container.mjs",
+    "release:hp": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/package-hp-release.ps1",
     "test:m6-local": "node scripts/run-local-regression.mjs",
     "test:m5-local": "node --experimental-strip-types scripts/verify-m1-local.mjs --browser",
     "notify:once": "node --experimental-strip-types scripts/notification-worker.mjs --once",

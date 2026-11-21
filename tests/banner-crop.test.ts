@@ -16,4 +16,13 @@ test("banner crop: portrait/landscape/zoom and every edge stay within the source
   for (const invalid of ["not json", "null", "[]", "1", "{}", JSON.stringify({ left: -1, top: 0, width: 300, height: 200 }), JSON.stringify({ left: 0, top: 0, width: 300, height: 100 }), JSON.stringify({ left: 0.1, top: 0, width: 300, height: 200 }), "x".repeat(301), new Blob()]) {
     assert.throws(() => parseBannerCrop(invalid), /Khung cắt/);
   }
+  for (const [width, height] of [[1920, 720], [720, 1920], [1001, 667], [600, 600]]) {
+    for (const zoom of [1, 1.5, 3]) for (const x of [0, 50, 100]) for (const y of [0, 50, 100]) {
+      const square = getBannerCrop(width, height, zoom, x, y, 1);
+      assert.ok(square.left >= 0 && square.top >= 0);
+      assert.ok(square.left + square.width <= width && square.top + square.height <= height);
+      assert.deepEqual(parseBannerCrop(JSON.stringify(square), 1), square);
+    }
+  }
+  assert.throws(() => parseBannerCrop(JSON.stringify({ left: 0, top: 0, width: 300, height: 200 }), 1), /Khung cắt/);
 });

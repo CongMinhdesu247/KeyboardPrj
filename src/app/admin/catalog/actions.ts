@@ -63,15 +63,16 @@ export async function saveCatalogItem(
       };
     oldImage = old.data.image_path;
   }
-  const removeImage = form.get("removeImage") === "on";
+  const file = form.get("image");
+  const hasNewFile = file instanceof File && file.size > 0;
+  const removeImage = form.get("removeImage") === "on" && !hasNewFile;
   item.imagePath = removeImage ? "" : (oldImage ?? "");
   let uploaded: string | undefined;
-  const file = form.get("image");
   const rawCrop = form.get("crop");
   let crop: BannerCropRect | undefined;
   if (!removeImage && rawCrop) {
     try {
-      crop = parseBannerCrop(rawCrop);
+      crop = parseBannerCrop(rawCrop, 1);
     } catch {
       return { message: "Khung cắt ảnh không hợp lệ. Căn lại ảnh rồi thử lại." };
     }

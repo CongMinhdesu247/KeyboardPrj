@@ -4,6 +4,7 @@ import Link from "next/link";
 import { submitFindRequest } from "@/app/preorder/actions";
 import type { M4State } from "@/lib/m4-contract";
 import { FormError } from "./form-error";
+import { VndInput } from "./vnd-input";
 export function FindRequestForm({ token }: { token: string }) {
   const [submissionToken] = useState(token);
   const [state, action, pending] = useActionState(
@@ -87,11 +88,10 @@ export function FindRequestForm({ token }: { token: string }) {
           </label>
           <label>
             Ngân sách dự kiến (VND)
-            <input
+            <VndInput
               name="budget"
-              type="number"
-              min="0"
-              max="1000000000"
+              min={0}
+              max={1000000000}
               required
               placeholder="Nhập 0 nếu chưa chốt"
             />
