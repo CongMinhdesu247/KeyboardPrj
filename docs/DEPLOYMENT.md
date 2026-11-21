@@ -70,8 +70,8 @@ Kỳ vọng `linux/amd64`. Dockerfile pin cả version+digest base image, `npm c
 **[PC Windows], cùng thư mục**, dùng SSH agent/config `homeserver` đã có, không đọc hay copy private key:
 
 ```powershell
-ssh homeserver 'mkdir -p /home/congminh/apps/KeyboardPrj/incoming'
-scp "output/deploy/trumpkeys-$releaseTag.tar.gz" "output/deploy/trumpkeys-image-$releaseTag.tar" homeserver:/home/congminh/apps/KeyboardPrj/incoming/
+ssh -i "$env:USERPROFILE\.ssh\homeserver_ed25519" congminh@100.95.33.63 'mkdir -p /home/congminh/apps/KeyboardPrj/incoming'
+scp -i "$env:USERPROFILE\.ssh\homeserver_ed25519" "output/deploy/trumpkeys-$releaseTag.tar.gz" "output/deploy/trumpkeys-image-$releaseTag.tar" congminh@100.95.33.63:/home/congminh/apps/KeyboardPrj/incoming/
 ```
 
 Nếu máy bạn chưa có alias `homeserver`, dùng đích SSH/Tailscale đã được bạn cấu hình (`congminh@100.95.33.63`) thay alias. Lỗi publickey xử lý ở máy bạn theo cấu hình SSH hiện có; không mở private key hoặc đổi sshd/UFW.

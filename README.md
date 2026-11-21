@@ -6,7 +6,7 @@ Tài liệu triển khai/bảo mật: [báo cáo audit](docs/SECURITY-AUDIT.md),
 ## Cập nhật lên HP Server (Production)
 
 > **Ghi chú cho AI & lần cập nhật sau:**
-> - **Môi trường HP đã cấu hình và đang chạy:** HP Ubuntu (`x86_64`), thư mục `/home/congminh/apps/KeyboardPrj`, Docker Compose project `trumpkeys-hp`, web lắng nghe `127.0.0.1:8094`, Cloudflare Named Tunnel riêng `trumpkeys-hp` (metrics `127.0.0.1:2094`) trỏ `https://trumpkeys.publice.io.vn`, file env dùng chung tại `/home/congminh/apps/KeyboardPrj/shared/.env`, backend Supabase managed riêng.
+> - **Môi trường HP đã cấu hình và đang chạy:** HP Ubuntu (`x86_64`), thư mục `/home/congminh/apps/KeyboardPrj`, Docker Compose project `trumpkeys-hp`, web lắng nghe `127.0.0.1:8094`, Cloudflare Named Tunnel riêng `trumpkeys-hp` (metrics `127.0.0.1:2094`) trỏ `https://trumpkeys.publice.io.vn`, file env dùng chung tại `/home/congminh/apps/KeyboardPrj/shared/.env`, backend Supabase managed riêng, SSH key trên PC là `~/.ssh/homeserver_ed25519` tới `congminh@100.95.33.63`.
 > - **Giới hạn SSH trong phiên AI:** từ phiên AI tự động, `ssh` tới `homeserver` / `congminh@100.95.33.63` bị `Permission denied (publickey)` (và không được đọc SSH key). Vì vậy quy trình chuẩn là **AI kiểm tra + commit + đóng gói trên PC**, sau đó **người dùng chạy `scp` và `docker compose up -d` từ terminal có SSH**.
 > - **Không đụng** cổng `8090–8093` (app `banking-local`), không chạy `down -v`/`prune`, không sửa `cloudflared` nếu không đổi tunnel.
 
@@ -24,7 +24,7 @@ Lệnh `npm run release:hp` ([package-hp-release.ps1](scripts/package-hp-release
 ### 2. Chuyển sang HP & khởi chạy bản mới (thay `<tag>` bằng mã in ra ở bước 1)
 Trên PC:
 ```powershell
-scp "output/deploy/trumpkeys-<tag>.tar.gz" "output/deploy/trumpkeys-image-<tag>.tar" homeserver:/home/congminh/apps/KeyboardPrj/incoming/
+scp -i "$env:USERPROFILE\.ssh\homeserver_ed25519" "output/deploy/trumpkeys-<tag>.tar.gz" "output/deploy/trumpkeys-image-<tag>.tar" congminh@100.95.33.63:/home/congminh/apps/KeyboardPrj/incoming/
 ```
 Trên HP Server (nếu có migration SQL mới thì chạy `npx supabase db push --remote=<PROJECT_REF> --skip-vault` trước):
 ```sh
@@ -33,7 +33,7 @@ sha256sum "incoming/trumpkeys-$release_tag.tar.gz" "incoming/trumpkeys-image-$re
 mkdir -p "releases/$release_tag" && tar -xzf "incoming/trumpkeys-$release_tag.tar.gz" -C "releases/$release_tag" && sudo docker load -i "incoming/trumpkeys-image-$release_tag.tar"
 cd "releases/$release_tag" && ln -s ../../shared/.env .env
 sudo env IMAGE_TAG="$release_tag" docker compose --env-file .env -p trumpkeys-hp -f compose.yaml up -d --no-build --pull never web
-curl --fail --max-time 5 http://127.0.0.1:8094/healthz
+for i in $(seq 1 15); do curl --fail --max-time 5 http://127.0.0.1:8094/healthz && break; sleep 2; done
 ```
 
 ## Khởi chạy
