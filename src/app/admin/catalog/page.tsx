@@ -111,7 +111,7 @@ export default async function CatalogPage({
                 )}
               </div>
               <div>
-                <span className="badge">
+                <span className={`badge ${item.active ? "badge-public" : "badge-draft"}`}>
                   {item.active ? "Công khai" : "Nháp / tạm ẩn"}
                 </span>
                 <h2>{item.name}</h2>
@@ -142,7 +142,13 @@ export default async function CatalogPage({
               </div>
               <div>
                 <dt>Tồn kho</dt>
-                <dd>
+                <dd
+                  className={
+                    item.type === "product" && item.stock_quantity === 0
+                      ? "catalog-stock-zero"
+                      : undefined
+                  }
+                >
                   {item.type === "product"
                     ? `${item.stock_quantity} ${item.unit}`
                     : "Không áp dụng"}

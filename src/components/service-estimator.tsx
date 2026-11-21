@@ -21,7 +21,14 @@ export function ServiceEstimator({catalog:allItems,categories:allCategories,demo
   const [lines,setLines] = useState<EstimateLine[]>([]);
   const [notice,setNotice] = useState("");
   const estimate = calculateEstimate(lines,catalog);
-  useEffect(()=>{if(initialCategory && categories.some(c=>c.slug===initialCategory) && !dialog.current?.open) dialog.current?.showModal();},[initialCategory,categories]);
+  const openedInitial = useRef("");
+  const hasInitialCategory = !!initialCategory && categories.some(c=>c.slug===initialCategory);
+  useEffect(()=>{
+    if(hasInitialCategory && openedInitial.current!==initialCategory && !dialog.current?.open) {
+      openedInitial.current=initialCategory;
+      dialog.current?.showModal();
+    }
+  },[initialCategory,hasInitialCategory]);
   function openCategory(selected: Category) {
     setCategory(selected);
     dialog.current?.showModal();

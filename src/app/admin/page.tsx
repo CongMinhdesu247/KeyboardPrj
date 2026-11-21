@@ -18,15 +18,21 @@ export default async function AdminPage() {
   ]);
   if (result.error || catalog.error || requests.error)
     throw new Error("Chưa tải được tổng quan cửa hàng.");
-  const orders = result.data as unknown as AdminOrder[],
+  const orders = (Array.isArray(result.data) ? result.data : []) as unknown as AdminOrder[],
     active = orders.filter((o) => !o.cancelled_at);
   const counts = orderStages.map(
     (_, stage) => active.filter((o) => o.stage === stage).length,
   );
-  const drafts = catalog.data.filter((i) => !i.active).length,
-    empty = catalog.data.filter(
+  const catalogItems = catalog.data ?? [];
+  const drafts = catalogItems.filter((i) => !i.active).length,
+    empty = catalogItems.filter(
       (i) => i.type === "product" && i.stock_quantity === 0,
     ).length;
+  const pendingRequests = (
+    (Array.isArray(requests.data) ? requests.data : []) as unknown as {
+      status: string;
+    }[]
+  ).filter((r) => r.status === "pending").length;
   return (
     <main id="main" className="container page-container">
       <div className="tracking-heading">
@@ -38,7 +44,7 @@ export default async function AdminPage() {
           <button className="button button-outline">Đăng xuất</button>
         </form>
       </div>
-      {growth.error ? <section className="admin-panel" role="alert"><h2>Chưa tải được thống kê tài khoản</h2><p>Hãy tải lại trang. Nếu lỗi tiếp diễn, kiểm tra kết nối và migration thống kê.</p><Link href="/admin">Tải lại tổng quan</Link></section> : <><AccountKpis data={growth.data as unknown as AccountGrowth}/><AccountGrowthChart data={growth.data as unknown as AccountGrowth}/></>}
+      {growth.error || !growth.data ? <section className="admin-panel" role="alert"><h2>Chưa tải được thống kê tài khoản</h2><p>Hãy tải lại trang. Nếu lỗi tiếp diễn, kiểm tra kết nối và migration thống kê.</p><Link href="/admin">Tải lại tổng quan</Link></section> : <><AccountKpis data={growth.data as unknown as AccountGrowth}/><AccountGrowthChart data={growth.data as unknown as AccountGrowth}/></>}
       <div className="admin-panel-heading"><h2>Công việc cửa hàng</h2><Link href="/admin/customers">Quản lý tài khoản</Link></div>
       <div className="admin-stat-grid">
         {orderStages.map((label, i) => (
@@ -99,11 +105,7 @@ export default async function AdminPage() {
           <h2>Cần chú ý</h2>
           <Link className="admin-task" href="/admin/requests?status=pending">
             <strong>
-              {
-                (requests.data as unknown as { status: string }[]).filter(
-                  (r) => r.status === "pending",
-                ).length
-              }{" "}
+              {pendingRequests}{" "}
               yêu cầu đặt tìm mới
             </strong>
             <span>Kiểm tra ảnh mẫu và liên hệ khách.</span>

@@ -13,7 +13,7 @@ export function BannerEditor({banner,products,baseUrl}:{banner:Banner;products:{
   catch{return {message:"Mất kết nối. Nội dung đang nhập vẫn được giữ; kiểm tra banner rồi thử lại.",version:previous.version,banner:previous.banner};}
  },{});
  const current=state.banner&&state.banner.version>=banner.version?state.banner:banner;
- return <details className="banner-editor" open={expanded} onToggle={e=>setExpanded(e.currentTarget.open)}><summary><span>Banner {banner.slot}</span><span>{banner.title||"Chưa thiết lập"}</span><span>{banner.active?"Công khai":"Đang ẩn"}</span></summary><form action={action} onReset={e=>e.preventDefault()}>
+ return <details className="banner-editor" open={expanded} onToggle={e=>setExpanded(e.currentTarget.open)}><summary><span>Banner {banner.slot}</span><span>{current.title||"Chưa thiết lập"}</span><span>{current.active?"Công khai":"Đang ẩn"}</span></summary><form action={action} onReset={e=>e.preventDefault()}>
   <input type="hidden" name="slot" value={banner.slot}/><input type="hidden" name="version" value={current.version}/>
   <fieldset disabled={pending} className="banner-fields"><legend className="visually-hidden">Chỉnh sửa banner {banner.slot}</legend>
    <div className="banner-admin-preview">{current.image_path?<ShopImage src={`${baseUrl}/storage/v1/object/public/home-banners/${encodeURIComponent(current.image_path)}`} alt={current.title||`Ảnh banner ${banner.slot}`} width={1280} height={480}/>:<p>Chưa có ảnh banner</p>}</div>

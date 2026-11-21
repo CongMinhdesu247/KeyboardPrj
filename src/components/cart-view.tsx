@@ -70,6 +70,7 @@ export function CartView({ catalog }: { catalog: CatalogItem[] }) {
                 type="number"
                 min="1"
                 max="99"
+                step="1"
                 value={line.quantity}
                 onChange={(e) =>
                   writeCart(
@@ -79,7 +80,10 @@ export function CartView({ catalog }: { catalog: CatalogItem[] }) {
                             ...i,
                             quantity: Math.max(
                               1,
-                              Math.min(99, Number(e.target.value) || 1),
+                              Math.min(
+                                99,
+                                Math.trunc(Number(e.target.value)) || 1,
+                              ),
                             ),
                           }
                         : i,

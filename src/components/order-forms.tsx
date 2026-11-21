@@ -155,11 +155,15 @@ export function CreateOrderForm({
                 name={`qty-${i.id}`}
                 min="0"
                 max="999"
+                step="1"
                 defaultValue="0"
                 onChange={(e) =>
                   setQuantities({
                     ...quantities,
-                    [i.id]: Number(e.target.value) || 0,
+                    [i.id]: Math.max(
+                      0,
+                      Math.min(999, Math.trunc(Number(e.target.value)) || 0),
+                    ),
                   })
                 }
               />

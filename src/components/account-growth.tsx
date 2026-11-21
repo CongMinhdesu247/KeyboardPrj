@@ -5,7 +5,12 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import type { AccountGrowth } from "@/lib/accounts-contract";
 
 const ranges = [[7,"7 ngày"],[30,"30 ngày"],[90,"3 tháng"],[365,"1 năm"]] as const;
-const dateLabel = (date: string) => new Intl.DateTimeFormat("vi-VN", {day:"2-digit",month:"2-digit",year:"numeric",timeZone:"Asia/Ho_Chi_Minh"}).format(new Date(`${date}T00:00:00+07:00`));
+const dateLabel = (date: string) => {
+  const parsed = new Date(`${date}T00:00:00+07:00`);
+  return Number.isNaN(parsed.getTime())
+    ? "—"
+    : new Intl.DateTimeFormat("vi-VN", {day:"2-digit",month:"2-digit",year:"numeric",timeZone:"Asia/Ho_Chi_Minh"}).format(parsed);
+};
 
 export function AccountGrowthChart({ data }: { data: AccountGrowth }) {
  const [days,setDays] = useState(30), [periodic,setPeriodic] = useState(false);
@@ -21,12 +26,12 @@ export function AccountGrowthChart({ data }: { data: AccountGrowth }) {
   <div className="growth-chart" role="region" aria-label={`Biểu đồ hai đường ${days} ngày. ${periodic?"Đăng ký mới và tài khoản truy cập mỗi ngày":"Tổng đăng ký lũy kế và tài khoản hoạt động trong 30 ngày"}. Bảng số liệu có bên dưới.`}>
    <ResponsiveContainer width="100%" height="100%" minWidth={0} initialDimension={{width:800,height:300}}>
     <LineChart data={points} accessibilityLayer margin={{top:16,right:16,bottom:8,left:0}}>
-     <CartesianGrid stroke="#e2e6eb" strokeDasharray="3 4" vertical={false}/>
-     <XAxis dataKey="date" tickFormatter={date=>dateLabel(String(date)).slice(0,5)} minTickGap={38} tick={{fontSize:12,fill:"#526174"}} axisLine={false} tickLine={false}/>
-     <YAxis allowDecimals={false} width={42} domain={[0,"auto"]} tick={{fontSize:12,fill:"#526174"}} axisLine={false} tickLine={false}/>
-     <Tooltip labelFormatter={date=>dateLabel(String(date))} formatter={(value,name)=>[Number(value).toLocaleString("vi-VN"),name]} filterNull contentStyle={{borderRadius:10,borderColor:"#e2e6eb"}}/>
-     <Line type="linear" dataKey={registeredKey} name={periodic?"Đăng ký mới":"Tổng đăng ký"} stroke="#996300" strokeWidth={2.5} dot={false} activeDot={{r:5}} isAnimationActive={false}/>
-     <Line type="linear" dataKey={activeKey} name={periodic?"Hoạt động trong ngày":"Hoạt động 30 ngày"} stroke="#0369a1" strokeDasharray="6 3" strokeWidth={2.5} dot={{r:2}} activeDot={{r:5}} connectNulls={false} isAnimationActive={false}/>
+     <CartesianGrid stroke="#e4e7ec" strokeDasharray="3 4" vertical={false}/>
+     <XAxis dataKey="date" tickFormatter={date=>dateLabel(String(date)).slice(0,5)} minTickGap={38} tick={{fontSize:12,fill:"#64748b"}} axisLine={false} tickLine={false}/>
+     <YAxis allowDecimals={false} width={42} domain={[0,"auto"]} tick={{fontSize:12,fill:"#64748b"}} axisLine={false} tickLine={false}/>
+     <Tooltip labelFormatter={date=>dateLabel(String(date))} formatter={(value,name)=>[Number(value).toLocaleString("vi-VN"),name]} filterNull contentStyle={{borderRadius:10,borderColor:"#e4e7ec",boxShadow:"0 4px 12px rgba(15,23,42,0.08)"}}/>
+     <Line type="linear" dataKey={registeredKey} name={periodic?"Đăng ký mới":"Tổng đăng ký"} stroke="#b58100" strokeWidth={2.5} dot={false} activeDot={{r:5}} isAnimationActive={false}/>
+     <Line type="linear" dataKey={activeKey} name={periodic?"Hoạt động trong ngày":"Hoạt động 30 ngày"} stroke="#0284c7" strokeDasharray="6 3" strokeWidth={2.5} dot={{r:2}} activeDot={{r:5}} connectNulls={false} isAnimationActive={false}/>
     </LineChart>
    </ResponsiveContainer>
   </div>

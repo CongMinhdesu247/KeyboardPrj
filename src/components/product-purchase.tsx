@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { CatalogItem } from "@/lib/domain";
-import { addCart,useCartReady } from "./cart-store";
+import { addCart, useCartReady } from "./cart-store";
+
 export function ProductPurchase({
   item,
   demo,
@@ -10,30 +11,57 @@ export function ProductPurchase({
   item: CatalogItem;
   demo: boolean;
 }) {
-  const [quantity, setQuantity] = useState(1),
-    [notice, setNotice] = useState("");
-  const max = item.type === "product" ? Math.min(item.stock ?? 0, 99) : 99,
-    ready=useCartReady(),disabled = demo || max < 1 || !ready;
+  const [quantity, setQuantity] = useState(1);
+  const [notice, setNotice] = useState("");
+  const max = item.type === "product" ? Math.min(item.stock ?? 0, 99) : 99;
+  const safeMax = Math.max(1, max);
+  const ready = useCartReady();
+  const unavailable = demo || max < 1;
+  const disabled = unavailable || !ready;
+
+  const updateQuantity = (next: number) => {
+    setQuantity(Math.max(1, Math.min(safeMax, Math.trunc(next) || 1)));
+  };
+
   return (
     <div className="product-purchase">
-      <label>
-        Số lượng
-        <input
-          aria-label="Số lượng mua"
-          type="number"
-          min="1"
-          max={Math.max(1, max)}
-          value={quantity}
-          onChange={(e) =>
-            setQuantity(
-              Math.max(
-                1,
-                Math.min(Math.max(1, max), Number(e.target.value) || 1),
-              ),
-            )
-          }
-        />
-      </label>
+      <div className="product-qty-row">
+        <label htmlFor="product-qty-input">Số lượng</label>
+        <div className="product-qty-stepper">
+          <button
+            type="button"
+            className="qty-step-btn"
+            aria-label="Giảm số lượng"
+            disabled={disabled || quantity <= 1}
+            onClick={() => updateQuantity(quantity - 1)}
+          >
+            −
+          </button>
+          <input
+            id="product-qty-input"
+            aria-label="Số lượng mua"
+            type="number"
+            min="1"
+            max={safeMax}
+            step="1"
+            value={quantity}
+            disabled={disabled}
+            onChange={(e) => updateQuantity(Number(e.target.value) || 1)}
+          />
+          <button
+            type="button"
+            className="qty-step-btn"
+            aria-label="Tăng số lượng"
+            disabled={disabled || quantity >= safeMax}
+            onClick={() => updateQuantity(quantity + 1)}
+          >
+            +
+          </button>
+        </div>
+        {item.type === "product" && max > 0 && (
+          <span className="product-qty-limit">Tối đa {max} {item.unit}</span>
+        )}
+      </div>
       <div className="form-actions">
         <button
           className="button button-outline"
@@ -59,12 +87,12 @@ export function ProductPurchase({
         )}
       </div>
       {notice && (
-        <p role="status">
+        <p role="status" className="product-notice">
           {notice} <Link href="/cart">Xem giỏ hàng</Link>
         </p>
       )}
-      {disabled && (
-        <p>
+      {unavailable && (
+        <p className="product-unavailable-note">
           {demo
             ? "Dữ liệu minh họa chưa nhận đặt mua."
             : "Mặt hàng đang hết tồn, bạn có thể liên hệ shop để đặt tìm."}
