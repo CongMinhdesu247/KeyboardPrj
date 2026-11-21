@@ -1,0 +1,90 @@
+name: trumpkeys-hp
+x-logs: &logs
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  web:
+    image: trumpkeys-web:${IMAGE_TAG:-local}
+    platform: linux/amd64
+    build:
+      context: .
+    restart: unless-stopped
+    init: true
+    # Allowlist: tunnel and backup credentials never enter the web container.
+    environment:
+      NODE_ENV: production
+      DEPLOYMENT_TARGET: hp
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      NODE_OPTIONS: --max-old-space-size=384
+      APP_ORIGIN: ${PUBLIC_URL:-https://trumpkeys.publice.io.vn}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://trumpkeys.publice.io.vn}
+      TRUSTED_PROXY: cloudflare
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY:-}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:-}
+      GEMINI_ENABLED: ${GEMINI_ENABLED:-false}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
+      TELEGRAM_ENABLED: ${TELEGRAM_ENABLED:-false}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID:-}
+      PREFER_IPV4: ${PREFER_IPV4:-false}
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8094}:3000"
+    networks: [application]
+    cpus: 1.0
+    mem_limit: 512m
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+          pids: 128
+    pids_limit: 128
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    logging: *logs
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.11.0@sha256:b94b96edf2c9c4360f8879c8580cfaa99077f19c849ec595ca2f711b27d4f344
+    platform: linux/amd64
+    profiles: [tunnel]
+    # Ubuntu host namespace required for the requested 127.0.0.1:8094 origin.
+    # App retains its own bridge; no other project's network or volume is reused.
+    network_mode: host
+    user: "65532:65532"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    command: [tunnel, --no-autoupdate, --metrics, "127.0.0.1:${TUNNEL_METRICS_PORT:-2094}", run]
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, cloudflared, tunnel, --metrics, "127.0.0.1:${TUNNEL_METRICS_PORT:-2094}", ready]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    cpus: 0.25
+    mem_limit: 128m
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+          pids: 64
+    pids_limit: 64
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    logging: *logs
+
+networks:
+  application:
+    driver: bridge

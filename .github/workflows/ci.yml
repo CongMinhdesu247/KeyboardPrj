@@ -1,0 +1,64 @@
+name: Quality checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: docker compose --env-file .env.example -f compose.yaml config --no-env-resolution --quiet
+      - run: sh -n scripts/backup-config.sh
+  container:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm run test:container
+      - run: python3 scripts/verify-hp-backup.py
+  supabase-local:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Start disposable Supabase local
+        run: |
+          # CI kiểm migration/RLS/types, không dùng Google credentials thật.
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const file = 'supabase/config.toml';
+          writeFileSync(file, readFileSync(file, 'utf8').replace(/(\[auth\.external\.google\]\s*enabled\s*=\s*)true/, '$1false'));
+          NODE
+          npx supabase start > /tmp/trumpkeys-supabase-start.log 2>&1
+      - name: Reset only ephemeral CI database and check policies
+        run: |
+          npx supabase db reset
+          npm run db:check
+          npm run db:types
+          npm run typecheck
+          npm run test:m1-local
+      - name: Stop local services, preserve no credentials as artifacts
+        if: always()
+        run: npx supabase stop

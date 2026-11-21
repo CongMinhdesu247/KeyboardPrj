@@ -1,0 +1,110 @@
+import assert from "node:assert/strict";
+import { setFixtureBrowserUser } from "./fixture-browser-auth.mjs";
+
+export async function verifyAccountsUi({page,expect,admin,customer,otherCustomer,rpc,runId}) {
+ const browser=page.context().browser(),context=await browser.newContext(),customerPage=await context.newPage();
+ const errors=[],onError=error=>errors.push(error.message.slice(0,500));page.on("pageerror",onError);customerPage.on("pageerror",onError);
+ const warnings=[],onConsole=message=>{if(["error","warning"].includes(message.type())&&!/net::ERR|Failed to load resource/.test(message.text()))warnings.push(message.text().slice(0,10000));};page.on("console",onConsole);
+ try {
+  await customerPage.goto("http://localhost:3000/account");await expect(customerPage).toHaveURL(/\/account\/login/);
+  await expect(customerPage.getByRole("button",{name:"Tiếp tục với Google",exact:true})).toBeVisible();
+  await customerPage.goto("http://localhost:3000/checkout");await expect(customerPage.getByRole("heading",{name:"Đăng nhập để đặt hàng",exact:true})).toBeVisible();
+  assert.equal(await customerPage.locator(".checkout-form").count(),0);
+  await setFixtureBrowserUser(context,customer);
+  await customerPage.goto("http://localhost:3000/account");await expect(customerPage.getByRole("heading",{name:"Hồ sơ cá nhân",exact:true})).toBeVisible();
+  assert.equal(await customerPage.locator(".customer-order").count(),0,"profile does not include order rows");
+  await expect(customerPage.getByLabel("Email đăng nhập",{exact:true})).toHaveAttribute("readonly","");
+  await customerPage.getByLabel("Họ và tên",{exact:true}).fill("Khách kiểm thử TRUMP");
+  await customerPage.getByLabel(/^Số điện thoại/).fill("invalid-phone");
+  await customerPage.getByRole("button",{name:"Lưu thay đổi",exact:true}).click();
+  await expect(customerPage.locator("#profile-phone-error")).toContainText("9 đến 15 chữ số");
+  await expect(customerPage.getByLabel("Họ và tên",{exact:true})).toHaveValue("Khách kiểm thử TRUMP");
+  await customerPage.getByLabel(/^Số điện thoại/).fill("0385 920 038");
+  await customerPage.getByLabel(/^Địa chỉ nhận hàng/).fill("123 Đường kiểm thử, Phường mẫu, Hà Nội");
+  const abortProfile=route=>route.request().method()==="POST"?route.abort("failed"):route.continue();
+  await customerPage.route("**/account",abortProfile);
+  await customerPage.getByRole("button",{name:"Lưu thay đổi",exact:true}).click();
+  await expect(customerPage.getByRole("status")).toContainText("Thông tin vẫn được giữ");
+  await expect(customerPage.getByLabel(/^Địa chỉ nhận hàng/)).toHaveValue("123 Đường kiểm thử, Phường mẫu, Hà Nội");
+  await customerPage.unroute("**/account",abortProfile);
+  await customerPage.getByRole("button",{name:"Lưu thay đổi",exact:true}).click();
+  await expect(customerPage.getByRole("status")).toContainText("Đã lưu thông tin cá nhân");
+  await customerPage.reload();await expect(customerPage.getByLabel(/^Số điện thoại/)).toHaveValue("0385920038");
+  await expect(customerPage.getByLabel("Họ và tên",{exact:true})).toHaveValue("Khách kiểm thử TRUMP");
+  await expect(customerPage.locator(".utility-links svg")).toHaveCount(3);
+  await expect(customerPage.locator('.utility-links a[href="/account"]')).toHaveAttribute("aria-current","page");
+  const mine=await rpc(customer,"my_orders");assert.equal(mine.error,null);assert.ok(mine.data.total>0,"storefront fixture has created an owned order");
+  await customerPage.getByRole("link",{name:"Đơn mua",exact:true}).click();await expect(customerPage).toHaveURL(/\/account\/orders$/);
+  await expect(customerPage.locator(".customer-order")).toHaveCount(mine.data.orders.length);
+  const owned=(await rpc(admin,"customer_orders",{p_user:customer.id})).data;
+  const item=(await rpc(admin,"read_order",{p_id:owned[0].id})).data.items[0].item_id;
+  await customerPage.goto(`http://localhost:3000/checkout?item=${item}&quantity=1`);
+  await expect(customerPage.getByLabel("Họ và tên",{exact:true})).toHaveValue("Khách kiểm thử TRUMP");
+  await expect(customerPage.getByLabel("Số điện thoại",{exact:true})).toHaveValue("0385920038");
+  await expect(customerPage.getByLabel("Địa chỉ nhận hàng",{exact:true})).toHaveValue("123 Đường kiểm thử, Phường mẫu, Hà Nội");
+  assert.equal((await rpc(otherCustomer,"my_orders")).data.total,0);
+  await customerPage.goto("http://localhost:3000/admin/customers");await expect(customerPage).toHaveURL(/\/admin\/join/);
+  await page.goto("http://localhost:3000/admin");
+  const growth=await rpc(admin,"account_growth");assert.equal(growth.error,null);assert.equal(growth.data.daily.length,365);
+  await expect(page.locator(".dashboard-kpis > div")).toHaveCount(4);
+  await expect(page.locator(".growth-chart svg")).toBeVisible();
+  await page.getByRole("button",{name:"7 ngày",exact:true}).click();
+  await expect(page.getByRole("button",{name:"7 ngày",exact:true})).toHaveAttribute("aria-pressed","true");
+  await page.getByText("Xem số liệu theo ngày",{exact:true}).click();
+  await expect(page.locator(".growth-data tbody tr")).toHaveCount(7);
+  await page.getByRole("button",{name:"1 năm",exact:true}).click();
+  await expect(page.locator(".growth-data tbody tr")).toHaveCount(365);
+  await page.getByLabel("Cách xem",{exact:true}).selectOption("daily");
+  await expect(page.locator(".growth-data th").nth(1)).toHaveText("Đăng ký mới");
+  await page.getByRole("button",{name:"30 ngày",exact:true}).click();
+  await page.getByText("Xem số liệu theo ngày",{exact:true}).click();
+  await page.getByLabel("Cách xem",{exact:true}).selectOption("total");
+  const chart=page.locator(".growth-chart svg");await chart.focus();await page.keyboard.press("ArrowRight");
+  await expect(page.locator(".recharts-tooltip-wrapper")).toBeVisible();
+  await page.mouse.click(280,100);
+  for(const width of [1440,768,375]){
+   await page.setViewportSize({width,height:1000});
+   await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+   await page.screenshot({path:`output/playwright/dashboard-growth-${width}.png`,fullPage:true,caret:"initial"});
+  }
+  await page.goto(`http://localhost:3000/admin/customers?q=${encodeURIComponent(customer.email)}`);
+  const row=page.locator(".managed-account").filter({hasText:customer.email});await expect(row).toHaveCount(1);
+  await expect(row).toContainText("Khách hàng");
+  const report=await rpc(admin,"account_report",{p_query:customer.email,p_status:"all",p_offset:0});assert.equal(report.error,null);assert.equal(report.data.matched,1);
+  await expect(page.locator(".accounts-table")).toBeVisible();
+  for(const width of [1440,768,375]){
+   await page.setViewportSize({width,height:900});await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+   await page.screenshot({path:`output/playwright/accounts-admin-${width}.png`,fullPage:true,caret:"initial"});
+   await customerPage.setViewportSize({width,height:900});await customerPage.goto("http://localhost:3000/account");
+   await expect(customerPage.getByRole("heading",{name:"Hồ sơ cá nhân",exact:true})).toBeVisible();
+   await expect(customerPage.getByLabel("Họ và tên",{exact:true})).toHaveValue("Khách kiểm thử TRUMP");
+   await expect(customerPage.locator(".customer-order")).toHaveCount(0);
+   await expect.poll(()=>customerPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+   await customerPage.screenshot({path:`output/playwright/customer-account-${width}.png`,fullPage:true,caret:"initial"});
+  }
+  await page.setViewportSize({width:1440,height:1000});
+  await row.getByRole("link",{name:/Xem \d+ đơn của tài khoản/}).click();await expect(page).toHaveURL(new RegExp(`customer=${customer.id}`));
+  await expect(page.locator(".admin-order-row")).toHaveCount(mine.data.total);
+  await page.goto(`http://localhost:3000/admin/customers?q=${encodeURIComponent(customer.email)}`);
+  await row.getByRole("button",{name:"Cấm tài khoản",exact:true}).click();
+  const dialog=page.getByRole("dialog");await expect(dialog).toBeVisible();await page.keyboard.press("Escape");await expect(dialog).toBeHidden();
+  await row.getByRole("button",{name:"Cấm tài khoản",exact:true}).click();
+  await dialog.getByLabel("Lý do",{exact:true}).fill(`Fixture ban ${runId}`);await dialog.getByRole("checkbox").check();await dialog.getByRole("button",{name:"Xác nhận cấm tài khoản",exact:true}).click();
+  await expect(row).toContainText("Bị cấm");await expect(dialog).toBeHidden();
+  assert.equal((await rpc(customer,"has_live_session")).data,false);assert.ok((await rpc(customer,"my_orders")).error);
+  await customerPage.goto("http://localhost:3000/account");await expect(customerPage).toHaveURL(/\/account\/login/);
+  await row.getByRole("button",{name:"Bỏ cấm",exact:true}).click();await dialog.getByLabel("Lý do",{exact:true}).fill("Fixture unban");await dialog.getByRole("checkbox").check();await dialog.getByRole("button",{name:"Xác nhận bỏ cấm tài khoản",exact:true}).click();
+  await expect(row).toContainText("Được phép sử dụng");assert.equal((await rpc(customer,"has_live_session")).data,false,"unban does not revive old JWT");
+  await row.getByRole("button",{name:"Xóa tài khoản",exact:true}).click();await dialog.getByLabel("Lý do",{exact:true}).fill("Fixture delete");await dialog.getByRole("checkbox").check();await dialog.getByRole("button",{name:"Xác nhận xóa tài khoản",exact:true}).click();
+  await expect(row).toHaveCount(0);
+  assert.equal((await rpc(admin,"customer_orders",{p_user:customer.id})).data.length,mine.data.total,"deletion preserves orders");
+  await page.goto(`http://localhost:3000/admin/customers?q=${encodeURIComponent(admin.email)}`);await expect(page.locator(".managed-account")).toContainText("Quản trị viên");assert.equal(await page.getByRole("button",{name:"Cấm tài khoản",exact:true}).count(),0);
+  const forbidden=await rpc(otherCustomer,"manage_account",{p_id:admin.id,p_version:1,p_action:"delete",p_reason:"Fixture attack"});assert.ok(forbidden.error);
+  await setFixtureBrowserUser(context,otherCustomer);await customerPage.goto("http://localhost:3000/account");
+  await customerPage.getByRole("button",{name:"Đăng xuất",exact:true}).click();await expect(customerPage).toHaveURL(/\/account\/login/);
+  assert.equal((await rpc(otherCustomer,"has_live_session")).data,false);
+  assert.deepEqual(errors,[],"Account pages must hydrate without errors");
+  if(warnings.length){const {writeFile}=await import("node:fs/promises");await writeFile("output/playwright/account-warnings.txt",warnings.join("\n\n"));}
+  assert.deepEqual(warnings,[],"Account management has no console warnings");
+ } finally {page.off("pageerror",onError);page.off("console",onConsole);await context.close();}
+}
