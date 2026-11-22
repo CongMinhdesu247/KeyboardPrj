@@ -36,6 +36,7 @@ export function Workshop({
   const router = useRouter();
   const [code, setCode] = useState("");
   const [trackingError, setTrackingError] = useState("");
+  const [ledPaused, setLedPaused] = useState(false);
   return (
     <main id="main" className="buyer-home">
       {banners.length?<HomeBanners banners={banners}/>:<section className="buyer-hero container" aria-labelledby="buyer-hero-title">
@@ -60,16 +61,6 @@ export function Workshop({
         <div><ShopIcon name="search" size={24}/><p><strong>Theo dõi từng bước</strong><span>Tiến độ và ảnh cập nhật bằng mã đơn</span></p></div>
       </div>
 
-      <div className="container home-shopping">
-        <nav className="home-category-links" aria-label="Mua theo nhóm sản phẩm">
-          <span>Bạn đang tìm gì?</span>
-          <Link href="/shop?category=keyboard">Bàn phím <ShopIcon name="arrow" size={16}/></Link>
-          <Link href="/shop?category=switch">Switch <ShopIcon name="arrow" size={16}/></Link>
-          <Link href="/shop?category=keycap">Keycap <ShopIcon name="arrow" size={16}/></Link>
-          <Link href="/shop?category=accessory">Phụ kiện <ShopIcon name="arrow" size={16}/></Link>
-        </nav>
-        <Storefront items={catalog} categories={categories} demo={demo} compact />
-      </div>
       <div className="home-band home-band-services">
       <section id="services" className="section container home-services">
         <div className="section-heading">
@@ -102,16 +93,48 @@ export function Workshop({
             </Link>
           ))}
         </div>
-        <div className="preorder-strip">
-          <div>
-            <strong>Chưa tìm thấy mẫu bạn cần?</strong>
-            <p>Gửi ảnh mẫu để shop tìm giúp. Không cần cọc.</p>
+        <div
+          className="preorder-strip preorder-spotlight"
+          data-led-paused={ledPaused ? "true" : undefined}
+        >
+          <div className="preorder-spotlight-inner">
+            <div className="preorder-spotlight-copy">
+              <strong>Chưa tìm thấy mẫu bạn cần?</strong>
+              <p>
+                Gửi ảnh mẫu bàn phím, keycap, switch hoặc ý tưởng build riêng để shop tìm giúp và tư vấn cấu hình đúng gu. Không cần cọc trước.
+              </p>
+              <ul className="preorder-spotlight-highlights" aria-label="Ưu điểm đặt tìm mẫu và custom">
+                <li>Tìm mẫu theo ảnh</li>
+                <li>Tư vấn cấu hình &amp; chất âm riêng</li>
+                <li>Báo giá rõ · Không cần cọc</li>
+              </ul>
+            </div>
+            <div className="preorder-spotlight-action">
+              <Link href="/preorder" className="button button-primary preorder-cta">
+                Đặt tìm mẫu &amp; custom <ShopIcon name="arrow" size={18} />
+              </Link>
+              <button
+                type="button"
+                className="preorder-led-toggle"
+                aria-pressed={ledPaused}
+                onClick={() => setLedPaused((prev) => !prev)}
+              >
+                {ledPaused ? "Bật hiệu ứng viền" : "Dừng hiệu ứng viền"}
+              </button>
+            </div>
           </div>
-          <Link href="/preorder" className="button button-outline">
-            Đặt tìm mẫu
-          </Link>
         </div>
       </section>
+      </div>
+      <div className="container home-shopping">
+        <nav className="home-category-links" aria-label="Mua theo nhóm sản phẩm">
+          <span>Bạn đang tìm gì?</span>
+          <Link href="/shop?category=keyboard">Bàn phím <ShopIcon name="arrow" size={16}/></Link>
+          <Link href="/shop?category=switch">Switch <ShopIcon name="arrow" size={16}/></Link>
+          <Link href="/shop?category=keycap">Keycap <ShopIcon name="arrow" size={16}/></Link>
+          <Link href="/shop?category=accessory">Phụ kiện <ShopIcon name="arrow" size={16}/></Link>
+        </nav>
+        <Storefront items={catalog} categories={categories} demo={demo} compact />
       </div>
       <section id="portfolio" className="section container portfolio">
         <div>

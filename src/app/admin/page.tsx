@@ -5,6 +5,7 @@ import { logout } from "./actions";
 import { AccountGrowthChart } from "@/components/account-growth";
 import { AccountKpis } from "@/components/account-kpis";
 import type { AccountGrowth } from "@/lib/accounts-contract";
+
 export default async function AdminPage() {
   const { client, user } = await requireAdmin();
   const [result, catalog, requests, growth] = await Promise.all([
@@ -18,7 +19,9 @@ export default async function AdminPage() {
   ]);
   if (result.error || catalog.error || requests.error)
     throw new Error("Chưa tải được tổng quan cửa hàng.");
-  const orders = (Array.isArray(result.data) ? result.data : []) as unknown as AdminOrder[],
+  const orders = (
+      Array.isArray(result.data) ? result.data : []
+    ) as unknown as AdminOrder[],
     active = orders.filter((o) => !o.cancelled_at);
   const counts = orderStages.map(
     (_, stage) => active.filter((o) => o.stage === stage).length,
@@ -33,49 +36,55 @@ export default async function AdminPage() {
       status: string;
     }[]
   ).filter((r) => r.status === "pending").length;
+
   return (
-    <main id="main" className="container page-container">
+    <main id="main" className="container page-container admin-dashboard">
       <div className="tracking-heading">
         <div>
           <h1>Tổng quan cửa hàng</h1>
           <p>{user.email}</p>
         </div>
-        <form action={logout}>
-          <button className="button button-outline">Đăng xuất</button>
-        </form>
+        <div className="admin-header-actions">
+          <Link href="/admin/orders/new" className="button button-primary">
+            Tạo đơn mới
+          </Link>
+          <form action={logout}>
+            <button className="button button-outline">Đăng xuất</button>
+          </form>
+        </div>
       </div>
-      {growth.error || !growth.data ? <section className="admin-panel" role="alert"><h2>Chưa tải được thống kê tài khoản</h2><p>Hãy tải lại trang. Nếu lỗi tiếp diễn, kiểm tra kết nối và migration thống kê.</p><Link href="/admin">Tải lại tổng quan</Link></section> : <><AccountKpis data={growth.data as unknown as AccountGrowth}/><AccountGrowthChart data={growth.data as unknown as AccountGrowth}/></>}
-      <div className="admin-panel-heading"><h2>Công việc cửa hàng</h2><Link href="/admin/customers">Quản lý tài khoản</Link></div>
-      <div className="admin-stat-grid">
+
+      <div className="admin-stat-grid" aria-label="Trạng thái đơn hàng trong 200 đơn mới nhất">
         {orderStages.map((label, i) => (
           <Link
             key={label}
             href={`/admin/orders?status=${i}`}
-            className="admin-stat"
+            className={`admin-stat admin-stat-stage-${i}`}
           >
-            <span>{label}</span>
+            <span>
+              <i className="admin-stat-dot" aria-hidden="true" />
+              {label}
+            </span>
             <strong>{counts[i]}</strong>
           </Link>
         ))}
       </div>
+
       <div className="admin-overview-grid">
         <section className="admin-panel">
           <div className="admin-panel-heading">
-            <h2>Đơn gần đây</h2>
-            <Link href="/admin/orders/new" className="button button-primary">
-              Tạo đơn mới
+            <h2>Đơn gần đây <small className="admin-muted">(200 đơn mới nhất)</small></h2>
+            <Link href="/admin/orders" className="admin-inline-link">
+              Xem tất cả →
             </Link>
           </div>
-          <p className="admin-muted">
-            Trong 200 đơn mới nhất.
-          </p>
           {!orders.length ? (
             <div className="admin-empty">
               <h3>Chưa có đơn hàng</h3>
-              <p>
-                Nhập bảng giá, chốt cấu hình với khách rồi tạo đơn đầu tiên.
-              </p>
-              <Link href="/admin/catalog">Mở bảng giá & kho</Link>
+              <p>Tạo đơn đầu tiên sau khi chốt cấu hình với khách.</p>
+              <Link href="/admin/catalog" className="admin-inline-link">
+                Mở bảng giá & kho
+              </Link>
             </div>
           ) : (
             <div className="admin-recent-list">
@@ -97,37 +106,55 @@ export default async function AdminPage() {
               ))}
             </div>
           )}
-          <Link href="/admin/orders" className="admin-text-link">
-            Xem tất cả đơn hàng
-          </Link>
         </section>
-        <aside className="admin-panel">
+
+        <aside className="admin-panel admin-focus-panel">
           <h2>Cần chú ý</h2>
-          <Link className="admin-task" href="/admin/requests?status=pending">
-            <strong>
-              {pendingRequests}{" "}
-              yêu cầu đặt tìm mới
-            </strong>
-            <span>Kiểm tra ảnh mẫu và liên hệ khách.</span>
-          </Link>
-          <Link className="admin-task" href="/admin/catalog?status=draft">
-            <strong>{drafts} mục chưa công khai</strong>
-            <span>Kiểm tra giá và nội dung trước khi mở bán.</span>
-          </Link>
-          <Link className="admin-task" href="/admin/catalog">
-            <strong>{empty} linh kiện hết hàng</strong>
-            <span>Kiểm tra kho trước khi xác nhận nhận cọc.</span>
-          </Link>
-          <div className="admin-note">
-            <strong>Xác nhận tiền thủ công</strong>
-            <p>
-              Chỉ ghi nhận cọc hoặc COD sau khi kiểm tra tiền đã thực sự về
-              shop.
-            </p>
+          <div className="admin-task-list">
+            <Link className="admin-task" href="/admin/requests?status=pending">
+              <span>Yêu cầu đặt tìm mới</span>
+              <strong className={pendingRequests > 0 ? "is-alert" : undefined}>
+                {pendingRequests}
+              </strong>
+            </Link>
+            <Link className="admin-task" href="/admin/catalog?status=draft">
+              <span>Mục chưa công khai</span>
+              <strong>{drafts}</strong>
+            </Link>
+            <Link className="admin-task" href="/admin/catalog">
+              <span>Linh kiện hết hàng</span>
+              <strong className={empty > 0 ? "is-alert" : undefined}>
+                {empty}
+              </strong>
+            </Link>
           </div>
-          <Link className="admin-text-link" href="/admin/readiness">Kiểm tra trước khi mở bán</Link>
         </aside>
       </div>
+
+      <section className="admin-secondary-section" aria-labelledby="accounts-overview-heading">
+        <div className="admin-panel-heading">
+          <h2 id="accounts-overview-heading">Thống kê tài khoản</h2>
+          <Link href="/admin/customers" className="admin-inline-link">
+            Quản lý tài khoản →
+          </Link>
+        </div>
+        {growth.error || !growth.data ? (
+          <section className="admin-panel" role="alert">
+            <h3>Chưa tải được thống kê tài khoản</h3>
+            <p className="admin-muted">
+              Hãy tải lại trang để thử lại.
+            </p>
+            <Link href="/admin" className="admin-inline-link">
+              Tải lại tổng quan
+            </Link>
+          </section>
+        ) : (
+          <>
+            <AccountKpis data={growth.data as unknown as AccountGrowth} />
+            <AccountGrowthChart data={growth.data as unknown as AccountGrowth} />
+          </>
+        )}
+      </section>
     </main>
   );
 }

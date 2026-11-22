@@ -58,7 +58,7 @@ test("M1 SQL: migration/seed, bootstrap, RLS, invite và thu hồi quyền", asy
               "select count(*)::int as count from public.service_categories",
             )
           ).rows[0].count,
-          7,
+          8,
         );
         assert.equal(
           (
@@ -215,7 +215,7 @@ test("M1 SQL: migration/seed, bootstrap, RLS, invite và thu hồi quyền", asy
         assert.equal(
           (await db.query("select * from public.service_categories")).rows
             .length,
-          6,
+          7,
         );
         assert.equal(
           (await db.query("select * from storage.objects")).rows.length,

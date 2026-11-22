@@ -49,6 +49,12 @@ export const categories: {
     description: "Tinh chỉnh âm thanh từ bên trong.",
     mark: "sound",
   },
+  {
+    slug: "cleaning",
+    title: "Vệ sinh phím",
+    description: "Làm sạch bụi bẩn, vệ sinh keycap, case và bảo dưỡng tổng thể.",
+    mark: "sound",
+  },
 ];
 export const catalog: CatalogItem[] = [
   {

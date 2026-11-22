@@ -33,13 +33,21 @@ export function CartView({ catalog }: { catalog: CatalogItem[] }) {
       <section className="cart-items">
         {rows.map(({ line, item }) => (
           <article className="cart-row" key={line.itemId}>
-            <Link href={`/shop/${line.itemId}`} className="cart-thumb">
-              {item && <ProductImage item={item} />}
-            </Link>
-            <div>
-              <Link href={`/shop/${line.itemId}`}>
-                <h2>{item?.name ?? "Mặt hàng không còn bán"}</h2>
+            {item ? (
+              <Link href={`/shop/${line.itemId}`} className="cart-thumb">
+                <ProductImage item={item} />
               </Link>
+            ) : (
+              <span className="cart-thumb" aria-hidden="true" />
+            )}
+            <div>
+              {item ? (
+                <Link href={`/shop/${line.itemId}`}>
+                  <h2>{item.name}</h2>
+                </Link>
+              ) : (
+                <h2>Mặt hàng không còn bán</h2>
+              )}
               {item && (
                 <p>
                   {money(item.price)} / {item.unit}

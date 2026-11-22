@@ -36,7 +36,7 @@ export default async function CatalogPage({
       <div className="section-heading">
         <div>
           <h1>Dịch vụ và linh kiện</h1>
-          <p>{all.length} mục đang quản lý · Giá chưa gồm phí vận chuyển</p>
+          <p>{all.length} mục đang quản lý</p>
         </div>
         <Link href="/admin/catalog/new" className="button button-primary">
           Thêm dịch vụ / sản phẩm
@@ -79,14 +79,16 @@ export default async function CatalogPage({
         </label>
         <button className="button button-outline">Lọc danh sách</button>
       </form>
-      <p className="catalog-help">
-        Chỉ mục công khai có giá mới xuất hiện ở cửa hàng. Mở từng linh kiện để nhập hoặc điều chỉnh tồn.
-      </p>
       <div className="catalog-admin-list">
         {!items.length && (
           <div className="info-panel">
             <h2>Chưa có mục phù hợp</h2>
             <p>Thử bỏ bộ lọc hoặc thêm dịch vụ/sản phẩm đầu tiên.</p>
+            {(filters.q || filters.category || filters.status) && (
+              <p>
+                <Link href="/admin/catalog">Xóa bộ lọc</Link>
+              </p>
+            )}
           </div>
         )}
         {items.map((item) => (

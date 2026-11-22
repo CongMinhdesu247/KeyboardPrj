@@ -112,7 +112,7 @@ export function ChatPanel({
             </p>
           )}
         </div>
-        <form action={action} className="chat-composer">
+        <form action={action} onReset={(e) => e.preventDefault()} className="chat-composer">
           <input type="hidden" name="token" value={token} />
           <input type="hidden" name="messageId" value={messageId} />
           <label className="form-honeypot" aria-hidden="true">

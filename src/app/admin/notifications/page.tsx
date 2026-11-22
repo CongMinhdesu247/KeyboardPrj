@@ -61,18 +61,20 @@ export default async function NotificationsPage() {
           <p>
             {d.pending} chờ gửi · {d.failed} hết lượt thử · {d.sent} đã gửi
           </p>
-          <form action={sendPendingNotifications}>
-            <button className="button button-primary" disabled={!telegram}>
-              Gửi tối đa 5 thông báo đến hạn
-            </button>
-          </form>
-          {d.failed > 0 && (
-            <form action={retryFailedNotifications}>
-              <button className="button button-outline" disabled={!telegram}>
-                Thử lại 5 thông báo lỗi sau khi sửa cấu hình
+          <div className="form-actions">
+            <form action={sendPendingNotifications}>
+              <button className="button button-primary" disabled={!telegram}>
+                Gửi tối đa 5 thông báo đến hạn
               </button>
             </form>
-          )}
+            {d.failed > 0 && (
+              <form action={retryFailedNotifications}>
+                <button className="button button-outline" disabled={!telegram}>
+                  Thử lại 5 thông báo lỗi sau khi sửa cấu hình
+                </button>
+              </form>
+            )}
+          </div>
           <p className="admin-muted">
             Gửi sau thao tác tạo đơn/đặt tìm/cập nhật tiền/tiến độ và yêu cầu hỗ
             trợ; worker xử lý retry theo lịch. Lỗi Telegram không hoàn tác đơn.

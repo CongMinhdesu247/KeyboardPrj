@@ -26,6 +26,7 @@ const labels = [
   ["stab", "Stabilizer"],
   ["keycap", "Keycap & đặt tìm"],
   ["sound_mod", "Tiêu âm & mod"],
+  ["cleaning", "Vệ sinh phím"],
 ];
 export function CatalogEditor({
   item,

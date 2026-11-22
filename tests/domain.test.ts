@@ -11,7 +11,7 @@ test("bảng ước tính chỉ nhận dịch vụ kể cả linh kiện đượ
   const source = [product, service];
   assert.deepEqual(serviceCatalog(source), [service]);
   assert.deepEqual(source, [product, service]);
-  assert.deepEqual(modCategorySlugs, ["lube", "stab", "keycap", "sound_mod"]);
+  assert.deepEqual(modCategorySlugs, ["lube", "stab", "keycap", "sound_mod", "cleaning"]);
 });
 
 test("host public chính xác, health loopback và từ chối host/proxy lạ", () => {

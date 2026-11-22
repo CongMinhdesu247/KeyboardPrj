@@ -35,7 +35,7 @@ export default async function OrdersPage({
       <div className="tracking-heading">
         <div>
           <h1>Đơn hàng</h1>
-          <p>Theo dõi tiếp nhận, xử lý và bàn giao trong một danh sách.</p>
+          <p>{orders.length} đơn · trong 200 đơn mới nhất</p>
         </div>
         <Link className="button button-primary" href="/admin/orders/new">
           Tạo đơn mới
@@ -75,12 +75,13 @@ export default async function OrdersPage({
           </label>
           <button className="button button-outline">Tìm kiếm</button>
           {q && (
-            <Link href={`/admin/orders?status=${status}`}>Xóa tìm kiếm</Link>
+            <Link
+              href={`/admin/orders?${new URLSearchParams({ status, ...(customer ? { customer } : {}) }).toString()}`}
+            >
+              Xóa tìm kiếm
+            </Link>
           )}
         </form>
-        <p className="admin-muted">
-          {orders.length} kết quả trong 200 đơn mới nhất
-        </p>
         {!orders.length ? (
           <div className="admin-empty">
             <h2>{all.length ? "Không có đơn phù hợp" : "Chưa có đơn hàng"}</h2>

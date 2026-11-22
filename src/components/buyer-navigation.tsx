@@ -22,7 +22,7 @@ export function BuyerNavigation() {
           <ShopIcon name={icon}/>{label}
         </Link>
       ))}
-      <Link className="buyer-nav-help" href="/chat"><ShopIcon name="chat"/>Tư vấn cấu hình</Link>
+      <Link className="buyer-nav-help" href="/chat" aria-current={pathname === "/chat" || pathname.startsWith("/chat/") ? "page" : undefined}><ShopIcon name="chat"/>Tư vấn cấu hình</Link>
     </nav>
   );
 }

@@ -68,12 +68,16 @@ export function PortfolioGallery({ items }: { items: PublicPortfolio[] }) {
           {filtered.map((i) => (
             <article className="portfolio-card" key={i.id}>
               <div className="portfolio-photo"><ShopImage src={i.imageUrl} alt={i.title} width={800} height={600} /></div>
-              <div>
+              <div className="portfolio-card-body">
                 <h3>{i.title}</h3>
                 <p className="portfolio-keyboard">{i.keyboard}</p>
                 {i.mods && <p className="portfolio-mods">{i.mods}</p>}
-                {i.description && <p>{i.description}</p>}
-                <SoundTest url={i.videoUrl} title={i.title} />
+                {i.description && <p className="portfolio-description">{i.description}</p>}
+                {i.videoUrl && (
+                  <div className="portfolio-card-actions">
+                    <SoundTest url={i.videoUrl} title={i.title} />
+                  </div>
+                )}
               </div>
             </article>
           ))}

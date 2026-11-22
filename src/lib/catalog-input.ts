@@ -51,6 +51,7 @@ export function parseCatalogInput(form: FormData): CatalogInput {
       "stab",
       "keycap",
       "sound_mod",
+      "cleaning",
       "keyboard",
       "switch",
       "accessory",

@@ -17,6 +17,9 @@ export function ServiceEstimator({catalog:allItems,categories:allCategories,demo
   const catalog = serviceCatalog(allItems);
   const categories = allCategories.filter((entry) => modCategorySlugs.includes(entry.slug));
   const dialog = useRef<HTMLDialogElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const estimateHeading = useRef<HTMLHeadingElement>(null);
+  const skipRestoreFocus = useRef(false);
   const [category,setCategory] = useState<Category|null>(()=>categories.find(c=>c.slug===initialCategory)??null);
   const [lines,setLines] = useState<EstimateLine[]>([]);
   const [notice,setNotice] = useState("");
@@ -29,7 +32,10 @@ export function ServiceEstimator({catalog:allItems,categories:allCategories,demo
       dialog.current?.showModal();
     }
   },[initialCategory,hasInitialCategory]);
-  function openCategory(selected: Category) {
+  function openCategory(selected: Category, trigger?: HTMLElement | null) {
+    triggerRef.current =
+      trigger ??
+      (document.activeElement instanceof HTMLElement ? document.activeElement : null);
     setCategory(selected);
     dialog.current?.showModal();
   }
@@ -78,12 +84,12 @@ export function ServiceEstimator({catalog:allItems,categories:allCategories,demo
   return <main id="main" className="buyer-home estimate-page">
     <header className="container estimate-page-heading"><h1>Ước tính chi phí</h1><p>Chọn dịch vụ, điều chỉnh số lượng và gửi cấu hình cho shop xác nhận.</p></header>
     <section className="container estimate-categories" aria-label="Chọn nhóm dịch vụ">
-      <div className="service-grid">{categories.map(entry=><button key={entry.slug} className="service-card" onClick={()=>openCategory(entry)} aria-label={`Xem bảng giá ${entry.title}`}><h2>{entry.title}</h2><p>{entry.description}</p><span className="card-link">Xem bảng giá ↗</span></button>)}</div>
+      <div className="service-grid">{categories.map(entry=><button key={entry.slug} type="button" className="service-card" onClick={(e)=>openCategory(entry, e.currentTarget)} aria-label={`Xem bảng giá ${entry.title}`}><strong className="service-card-title">{entry.title}</strong><span className="service-card-desc">{entry.description}</span><span className="card-link">Xem bảng giá ↗</span></button>)}</div>
     </section>
       <div className="home-band home-band-estimate">
       <section id="estimate" className="section container estimate-section">
         <div className="estimate-intro">
-          <h2>Ước tính chi phí mod</h2>
+          <h2 ref={estimateHeading} tabIndex={-1}>Ước tính chi phí mod</h2>
           <p>
             Chọn dịch vụ và số lượng để hình dung chi phí. Shop sẽ kiểm tra độ
             tương thích và xác nhận báo giá trước khi làm.
@@ -101,7 +107,7 @@ export function ServiceEstimator({catalog:allItems,categories:allCategories,demo
             <div className="estimate-empty">
               <span aria-hidden="true">＋</span>
               <h4>Bắt đầu với điều bạn muốn cải thiện</h4>
-              <p>Thêm lube, stab, keycap hoặc tiêu âm từ bảng giá.</p>
+              <p>Thêm lube, stab, keycap, tiêu âm hoặc vệ sinh phím từ bảng giá.</p>
               <button
                 className="text-button"
                 disabled={!categories.length}
@@ -200,6 +206,13 @@ export function ServiceEstimator({catalog:allItems,categories:allCategories,demo
         ref={dialog}
         className="service-dialog"
         aria-labelledby="dialog-title"
+        onClose={() => {
+          if (skipRestoreFocus.current) {
+            skipRestoreFocus.current = false;
+            return;
+          }
+          triggerRef.current?.focus();
+        }}
         onClick={(event) => {
           if (event.target === event.currentTarget) dialog.current?.close();
         }}
@@ -300,10 +313,12 @@ export function ServiceEstimator({catalog:allItems,categories:allCategories,demo
         <button
           className="button button-primary full-width"
           onClick={() => {
+            skipRestoreFocus.current = true;
             dialog.current?.close();
             document
               .getElementById("estimate")
               ?.scrollIntoView({ behavior: "instant" });
+            estimateHeading.current?.focus({ preventScroll: true });
           }}
         >
           Xem ước tính · {formatVnd(estimate.total)}

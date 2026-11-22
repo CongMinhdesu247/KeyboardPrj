@@ -4,7 +4,7 @@ export function serviceCatalog(catalog: CatalogItem[]) {
   return catalog.filter((item) => item.type === "service");
 }
 
-export const modCategorySlugs = ["lube", "stab", "keycap", "sound_mod"];
+export const modCategorySlugs = ["lube", "stab", "keycap", "sound_mod", "cleaning"];
 
 export const formatVnd = (value: number) =>
   new Intl.NumberFormat("vi-VN", {

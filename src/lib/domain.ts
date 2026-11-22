@@ -3,6 +3,7 @@ export type CategorySlug =
   | "stab"
   | "keycap"
   | "sound_mod"
+  | "cleaning"
   | "keyboard"
   | "switch"
   | "accessory";

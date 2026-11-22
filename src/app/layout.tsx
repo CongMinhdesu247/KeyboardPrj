@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { shop } from "@/lib/brand";
-import { PwaInstall } from "@/components/pwa-install";
 import { BuyerNavigation, BuyerCartLink } from "@/components/buyer-navigation";
 import { UtilityLinks } from "@/components/utility-links";
 import "./globals.css";
@@ -112,7 +111,6 @@ export default function RootLayout({
           </div>
           <div className="buyer-footer-bottom">
             <span>TRUMP Keys · Giá chưa gồm phí ship và COD</span>
-            <PwaInstall />
             <Link href="/admin">Khu vực quản trị</Link>
           </div>
           </div>
