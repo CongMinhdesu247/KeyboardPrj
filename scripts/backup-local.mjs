@@ -408,7 +408,7 @@ async function verify(folder) {
       session = randomUUID();
     sql(
       target,
-      `insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values('${user}','restore-drill@example.test',now(),'{}');insert into auth.identities(provider_id,user_id,identity_data,provider,created_at,updated_at) values('${user}','${user}',jsonb_build_object('sub','${user}','email','restore-drill@example.test','email_verified',true),'google',now(),now());insert into auth.sessions(id,user_id,created_at,updated_at,aal) values('${session}','${user}',now(),now(),'aal1');insert into public.admin_members(user_id,email) values('${user}','restore-drill@example.test');`,
+      `insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data,created_at) values('${user}','restore-drill@example.test',now(),'{}',now());insert into auth.identities(provider_id,user_id,identity_data,provider,created_at,updated_at) values('${user}','${user}',jsonb_build_object('sub','${user}','email','restore-drill@example.test','email_verified',true),'google',now(),now());insert into auth.sessions(id,user_id,created_at,updated_at,aal) values('${session}','${user}',now(),now(),'aal1');insert into public.admin_members(user_id,email) values('${user}','restore-drill@example.test');`,
     );
     const claims = sqlLiteral(JSON.stringify({ session_id: session }));
     const admin = sql(
