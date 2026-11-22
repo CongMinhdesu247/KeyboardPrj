@@ -71,3 +71,8 @@ __pycache__/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# multi-agent local artifacts
+.agents/runs/
+.worktrees/
+auth.json

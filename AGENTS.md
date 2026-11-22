@@ -22,6 +22,45 @@
 - Kiểm tra `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`. Typecheck tạo route types bằng Next CLI trước khi chạy tsc.
 - Giao diện tiếng Việt, responsive 375px/1440px, focus rõ và giữ được Escape/keyboard trong dialog.
 
+# Quy ước phối hợp Multi-Agent
+
+## Mục tiêu và phân vai
+
+Phối hợp **Gemini Pro**, **Codex Plus** và **Flash/Free** theo thế mạnh thực tế, phản biện có bằng chứng và tối ưu hạn mức. File Markdown là quy ước phối hợp, không tự cấp quyền hay tạo kết nối hệ thống. Mọi agent đều phải tuân thủ toàn bộ hướng dẫn phát triển và ràng buộc bảo mật/DB/deploy của KeyboardPrj ở trên.
+
+- **Coordinator / Architect — Gemini Pro (mặc định):** làm rõ yêu cầu, lập plan, chia task, xây UI/frontend (`src/app/**`, `src/components/**`), tích hợp đa module và review độc lập code của Codex.
+- **Core Logic / Debug Implementer — Codex Plus:** backend/business logic phức tạp (`src/lib/**`, Server Actions, SQL/RLS/RPC trong `supabase/`), thuật toán, edge cases, debug lỗi khó, refactor sâu và review độc lập code của Gemini.
+- **Scout / Verifier — Flash / Flash-Lite / Free:** tìm file, đọc log, tóm tắt ngữ cảnh (`file:dòng`), chạy `lint`/`typecheck`/`test`/`build`, viết docs/boilerplate/test đơn giản để tiết kiệm hạn mức cho Pro và Codex. Không tự quyết kiến trúc, auth, RLS hoặc schema.
+- **Challenger — khác họ model với tác giả:** Gemini viết → Codex review; Codex viết → Gemini review. Cùng họ model đổi tên vai trò không phải phản biện chéo.
+
+Chi tiết định tuyến và hạn mức xem `.agents/rules/01-model-routing.md`. Khi review hoặc nghiệm thu, đọc thêm `.agents/rules/02-debate-protocol.md` và `.agents/rules/03-quality-gates.md`.
+
+Giao tiếp tiếng Việt; code, tên biến và commit tiếng Anh.
+
+## Quy mô công việc & Tiết kiệm hạn mức
+
+- **Việc nhỏ, rủi ro thấp (< ~30 dòng, 1–2 file):** làm trực tiếp, kiểm tra phù hợp, không cần plan/board/subagent hay gọi Codex.
+- **Tính năng, logic quan trọng, bug khó, thay đổi nhiều module:** khảo sát gọn bằng Flash trước nếu cần, lưu plan `.agents/plans/<slug>.md`, tạo task từ `.agents/templates/task.md`.
+- Ghi lý do trong plan trước khi xóa file hoặc đổi schema/RPC/API contract.
+- Không tự cài dependencies, đổi cấu hình toàn máy, deploy lên HP hoặc đưa secrets/PII/SSH key vào prompt khi chưa thuộc phạm vi được giao.
+
+## Điều phối và quyền sửa file
+
+- Một coordinator duy nhất cập nhật `.agents/BOARD.md`, cấp task ID, owner, file được sửa và dependencies **trước** khi gọi worker có quyền sửa file hoặc review chính thức (khảo sát chỉ đọc ngắn bằng Flash/research trước khi lập plan không bắt buộc tạo dòng board). Worker chỉ cập nhật task/report được giao.
+- Mỗi task có đúng một writer tại một thời điểm; mặc định tối đa hai worker đồng thời. Cùng workspace không giao hai writer đụng cùng file, lockfile (`package-lock.json`), cấu hình hay thư mục build (`.next/`) — trùng phạm vi thì chạy tuần tự.
+- Worktree riêng chỉ dùng khi Git root đúng dự án và đã có commit nền.
+- Board và file claims là quy ước phối hợp, **không phải khóa hệ thống**. Worker không tự sinh thêm worker hay gọi ngược coordinator (chỉ delegate một cấp, tránh vòng lặp Gemini → Codex → Gemini).
+- Không reset/clean/stash/ghi đè thay đổi có sẵn của người dùng hoặc agent khác. Xác minh Git root qua preflight (`.\scripts\init-project.ps1`) trước mọi thao tác Git; từ chối repo cha ngoài dự án.
+
+## Hoàn tất và bàn giao
+
+Trạng thái task: `TODO → IN_PROGRESS → IN_REVIEW → DONE` (hoặc `BLOCKED` kèm điều kiện tiếp tục).
+Trạng thái review: `NOT_REQUIRED | PENDING_EXTERNAL_REVIEW | CHANGES_REQUESTED | APPROVED`.
+
+Task quan trọng chỉ `DONE` khi đạt acceptance criteria, kiểm tra thích hợp đã pass (`npm run lint`, `npm run typecheck`, `npm test`, `npm run build` và test local liên quan nếu đụng DB/UI) và model đối trọng đã review bản cuối. Thiếu kết nối/quota: vẫn bàn giao phần đã làm, giữ `IN_REVIEW / PENDING_EXTERNAL_REVIEW` kèm prompt cho bên còn lại; không giả đã gọi agent.
+
+Báo cáo luôn nêu: file thay đổi, lệnh và kết quả kiểm tra, reviewer/model thật, phần chưa xác minh. Không tìm thấy lỗi có bằng chứng là kết quả review hợp lệ.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know
