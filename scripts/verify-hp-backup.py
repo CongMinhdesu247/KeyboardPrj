@@ -17,9 +17,20 @@ name = 'trumpkeys-drill-' + token
 database = 'trumpkeys_restore_' + token
 folder = hp.ROOT / token
 folder.mkdir()
+import time
+created = False
 try:
-    hp.run(['docker', 'run', '-d', '--name', name, '--label', 'trumpkeys.drill=' + token, '--network', 'none', '--memory', '768m', '--cpus', '0.5', '--tmpfs', '/var/lib/postgresql/data:rw,size=512m', '-e', 'POSTGRES_PASSWORD=synthetic-fixture-only', hp.IMAGE])
-    import time
+    for attempt in range(3):
+        pull = subprocess.run(['docker', 'pull', hp.IMAGE], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if pull.returncode == 0:
+            break
+        if attempt == 2:
+            raise RuntimeError(f'docker pull failed: {pull.stderr.strip()}')
+        time.sleep(3)
+    start = subprocess.run(['docker', 'run', '-d', '--name', name, '--label', 'trumpkeys.drill=' + token, '--network', 'none', '--memory', '768m', '--cpus', '0.5', '--tmpfs', '/var/lib/postgresql/data:rw,size=512m', '-e', 'POSTGRES_PASSWORD=synthetic-fixture-only', hp.IMAGE], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if start.returncode:
+        raise RuntimeError(f'docker run failed: {start.stderr.strip()}')
+    created = True
     for _ in range(60):
         r = subprocess.run(['docker', 'exec', name, 'pg_isready', '-U', 'postgres'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if r.returncode == 0:
@@ -59,6 +70,7 @@ try:
     print('PASS: isolated real PostgreSQL restore + object bytes, checksum rejection; no production credentials used.')
 finally:
     # Only the source fixture container created above; no volumes or other projects.
-    label = hp.run(['docker','inspect','--format','{{index .Config.Labels "trumpkeys.drill"}}',name])
-    if label == token:
-        hp.run(['docker','rm','-f',name])
+    if created:
+        label = hp.run(['docker','inspect','--format','{{index .Config.Labels "trumpkeys.drill"}}',name])
+        if label == token:
+            hp.run(['docker','rm','-f',name])
