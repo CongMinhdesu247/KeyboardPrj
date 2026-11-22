@@ -1,5 +1,5 @@
 "use server";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import sharp from "sharp";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -21,6 +21,7 @@ export async function submitOrder(
   const { client } = await requireAdmin();
   let payload: Record<string, Json>;
   let uploaded: string | undefined;
+  let reusedExisting = false;
   const text = (key: string, max: number, required = false) => {
     const value = String(form.get(key) ?? "").trim();
     if (value.length > max || (required && !value))
@@ -148,11 +149,25 @@ export async function submitOrder(
             throw new Error(
               "Chỉ nhận ảnh JPEG/PNG/WebP hoặc video MP4 hợp lệ.",
             );
-          uploaded = `${orderId}/${randomUUID()}.${extension}`;
+          const contentHash = createHash("sha256").update(bytes).digest("hex");
+          // Keep the UUID filename contract enforced by order_command.
+          const mediaId = createHash("sha256")
+            .update(`${requestId.toLowerCase()}:${contentHash}`)
+            .digest("hex")
+            .slice(0, 32)
+            .replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5");
+          uploaded = `${orderId}/${mediaId}.${extension}`;
           const result = await client.storage
             .from("order-media")
             .upload(uploaded, bytes, { contentType, upsert: false });
-          if (result.error) throw new Error("Chưa tải được file. Hãy thử lại.");
+          if (result.error) {
+            reusedExisting =
+              result.error.status === 409 ||
+              String(result.error.statusCode) === "409" ||
+              /already exists|duplicate/i.test(result.error.message);
+            if (!reusedExisting)
+              throw new Error("Chưa tải được file. Hãy thử lại.");
+          }
           payload.path = uploaded;
         }
       } else throw new Error("Thao tác không hợp lệ.");
@@ -171,7 +186,8 @@ export async function submitOrder(
   } | null;
   if (result.error || !data?.ok || !data.id) {
     // A lost RPC response may follow a commit; never delete committed evidence.
-    if (uploaded && !result.error) await client.storage.from("order-media").remove([uploaded]);
+    if (uploaded && !result.error && !reusedExisting)
+      await client.storage.from("order-media").remove([uploaded]);
     return {
       message:
         orderErrors[data?.code ?? ""] ??

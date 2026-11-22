@@ -1,11 +1,11 @@
 "use client";
 import { useActionState,useEffect,useState } from "react";
-import type { Account } from "@/lib/customer-account";
 import type { ProfileState } from "@/lib/profile";
 import { saveCustomerProfile } from "@/app/account/actions";
 import { FormError } from "./form-error";
 import { ShopIcon } from "./shop-icon";
-export function ProfileForm({account}:{account:Account}) {
+export type ProfileAccount = { email: string; name: string; phone: string; address: string; version: number };
+export function ProfileForm({account}:{account:ProfileAccount}) {
  const [draft,setDraft]=useState({name:account.name,phone:account.phone,address:account.address});
  const [result,action,pending]=useActionState(async(previous:ProfileState,form:FormData):Promise<ProfileState>=>{
   try {const saved=await saveCustomerProfile(previous,form);if(saved.ok&&saved.profile)setDraft(saved.profile);return saved;}

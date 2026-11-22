@@ -5,6 +5,9 @@ description: >-
   Dùng để khoanh vùng file:dòng, đọc docs/log dài, chạy lint/typecheck/test/build
   và tóm tắt ngữ cảnh trước khi gọi Gemini Pro hoặc Codex Plus.
 model: flash_lite
+enable_write_tools: true
+enable_mcp_tools: false
+enable_subagent_tools: false
 ---
 
 # Scout Worker — KeyboardPrj

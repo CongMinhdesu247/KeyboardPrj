@@ -5,6 +5,9 @@ description: >-
   Dùng để phân tích yêu cầu theo docs/REQUIREMENTS.md, thiết kế kiến trúc Next.js App Router + Supabase,
   lập plan và chia file ownership trước khi triển khai.
 model: pro
+enable_write_tools: false
+enable_mcp_tools: false
+enable_subagent_tools: false
 ---
 
 # Architect Gemini — KeyboardPrj

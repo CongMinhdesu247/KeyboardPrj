@@ -4,6 +4,9 @@ description: >-
   Reviewer độc lập (Gemini Pro) chuyên phản biện code do Codex viết hoặc kiểm tra chéo
   tích hợp, bảo mật, RLS, edge cases và tuân thủ AGENTS.md của KeyboardPrj.
 model: pro
+enable_write_tools: false
+enable_mcp_tools: false
+enable_subagent_tools: false
 ---
 
 # Reviewer Critic — KeyboardPrj

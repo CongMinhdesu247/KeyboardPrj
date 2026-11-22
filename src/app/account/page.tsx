@@ -5,5 +5,5 @@ export const dynamic = "force-dynamic";
 export const metadata={title:"Hồ sơ cá nhân",robots:{index:false,follow:false}};
 export default async function AccountPage() {
  const {account}=await requireCustomerAccount();
- return <AccountShell account={account} selected="profile"><ProfileForm account={account}/></AccountShell>;
+ return <AccountShell account={account} selected="profile"><ProfileForm account={{email:account.email,name:account.name,phone:account.phone,address:account.address,version:account.version}}/></AccountShell>;
 }

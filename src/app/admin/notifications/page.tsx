@@ -99,7 +99,18 @@ export default async function NotificationsPage() {
                     : n.attempts >= 5
                       ? "Hết lượt thử · cần kiểm tra cấu hình"
                       : `Chờ gửi · ${formatDate(n.next_attempt_at)}`}
-                  {n.last_error && <small>Lỗi: {n.last_error}</small>}
+                  {n.last_error && (
+                    <small>
+                      Lỗi:{" "}
+                      {n.last_error === "network"
+                        ? "Lỗi mạng"
+                        : n.last_error === "provider"
+                          ? "Lỗi nhà cung cấp"
+                          : n.last_error === "rate_limit"
+                            ? "Vượt giới hạn gửi"
+                            : "Lỗi gửi"}
+                    </small>
+                  )}
                 </span>
               </div>
             ))}

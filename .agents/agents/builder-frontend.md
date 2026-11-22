@@ -5,6 +5,9 @@ description: >-
   Dùng khi xây dựng hoặc chỉnh sửa Server/Client Components, trang storefront, admin UI,
   dialog/tab/keyboard accessibility và responsive 375px/1440px.
 model: pro
+enable_write_tools: true
+enable_mcp_tools: false
+enable_subagent_tools: false
 ---
 
 # Builder Frontend — KeyboardPrj

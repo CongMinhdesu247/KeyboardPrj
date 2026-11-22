@@ -733,10 +733,7 @@ try {
               mimeType: "image/png",
               buffer: Buffer.from("not an image"),
             });
-          await page
-            .getByRole("button", { name: "Tạo mục mới", exact: true })
-            .click();
-          await expect(page.getByRole("status")).toContainText(
+          await expect(page.locator('.banner-crop [role="alert"]')).toContainText(
             "Không đọc được ảnh",
           );
           await expect(
@@ -825,22 +822,17 @@ try {
             caret: "initial",
             path: "output/playwright/m2-home-mobile.png",
           });
-          await customer
-            .getByRole("link", {
-              name: "Xem bảng giá Keycap & đặt tìm",
-              exact: true,
-            })
-            .click();
-          const product = customer.getByRole("listitem").filter({
+          await customer.goto("http://localhost:3000/shop?category=keycap");
+          const product = customer.locator(".product-card").filter({
             has: customer.getByRole("heading", { name: title, exact: true }),
           });
-          await expect(product).toContainText("Còn 3 bộ");
+          await expect(product).toContainText("Còn 3");
           await expect(product).not.toContainText("17.000");
           await product
-            .getByRole("button", { name: "+ Chọn", exact: true })
+            .getByRole("button", { name: "Thêm vào giỏ", exact: true })
             .click();
-          await customer
-            .getByRole("button", { name: /Xem ước tính ·/ })
+          await product
+            .getByRole("link", { name: "Xem giỏ", exact: true })
             .click();
           const qty = customer.getByRole("spinbutton", {
             name: `Số lượng ${title}`,
@@ -848,9 +840,12 @@ try {
           });
           await qty.fill("2");
           await qty.press("Tab");
-          await expect(
-            customer.locator(".estimate-total strong"),
-          ).toContainText("50.000");
+          await expect(customer.locator(".cart-summary")).toContainText(
+            "50.000",
+          );
+          await customer.evaluate(() =>
+            localStorage.removeItem("trumpkeys-cart-v1"),
+          );
           await customer.screenshot({
             caret: "initial",
             path: "output/playwright/m2-estimate-mobile.png",

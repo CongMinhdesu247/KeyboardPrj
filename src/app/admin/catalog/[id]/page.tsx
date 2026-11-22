@@ -64,7 +64,8 @@ export default async function EditCatalogPage({
           <section className="info-panel" id="history">
             <h2>Lịch sử nhập / điều chỉnh</h2>
             <p>
-              100 lần gần nhất. Giữ/trừ hàng theo tiền cọc sẽ được nối ở M3.
+              100 lần gần nhất. Tồn kho được trừ tự động khi xác nhận tiền thực
+              nhận của đơn hàng.
             </p>
             <ul className="inventory-history">
               {!history.length && <li>Chưa có biến động tồn kho.</li>}

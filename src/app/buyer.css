@@ -1207,6 +1207,7 @@ body:has(.buyer-navigation[data-checkout]) .site-header .header-inner { grid-tem
   .buyer-home .home-tracking label { font-size: 21px; margin-bottom: 14px; display: block; }
   .buyer-catalog-layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .buyer-catalog-sidebar .store-search { margin-bottom: 14px; }
+  .buyer-catalog-sidebar .store-search input { font-size: 16px; }
   .buyer-catalog-sidebar .store-category-tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 6px; margin-bottom: 6px; }
   .buyer-catalog-sidebar .store-category-tabs h2,
   .buyer-catalog-sidebar > p { display: none; }

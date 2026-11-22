@@ -92,7 +92,7 @@ export async function verifyStorefrontUi({
       .locator(".product-card")
       .filter({ has: publicPage.getByRole("heading", { name, exact: true }) });
     await expect(card).toContainText("650.000");
-    await expect(card).toContainText("Còn 4 bộ");
+    await expect(card).toContainText("Còn 4");
     await expect
       .poll(() =>
         card

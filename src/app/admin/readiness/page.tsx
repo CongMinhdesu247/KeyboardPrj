@@ -158,14 +158,14 @@ export default async function ReadinessPage() {
           </li>
           <li>
             Quét QR bằng ứng dụng ngân hàng; kiểm đúng Agribank, người nhận, số
-            tiền cọc20% hoặc100% và nội dung riêng của đơn.
+            tiền cọc 20% hoặc 100% và nội dung riêng của đơn.
           </li>
           <li>
             Kiểm tra Telegram. Admin chỉ ghi nhận tiền sau khi tiền vào tài
             khoản, rồi kiểm lại tồn và tiến độ trên trang khách.
           </li>
           <li>
-            Đi lần lượt Đang xử lý → Hoàn thành. Với COD, chỉ ghi80% còn lại khi
+            Đi lần lượt Đang xử lý → Hoàn thành. Với COD, chỉ ghi 80% còn lại khi
             shop thực nhận đối soát; kiểm số liệu tại Tiền thực thu.
           </li>
           <li>
@@ -190,7 +190,7 @@ export default async function ReadinessPage() {
             không reset DB đang dùng.
           </li>
           <li>
-            Khi chuyển HP: xác minh cổng8094/tài nguyên, cấu hình DB/Storage bền
+            Khi chuyển HP: xác minh cổng 8094/tài nguyên, cấu hình DB/Storage bền
             vững, HTTPS/OAuth và worker; giữ các ứng dụng khác. Chưa thực hiện
             các bước này trên HP.
           </li>

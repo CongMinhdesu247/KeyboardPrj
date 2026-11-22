@@ -27,12 +27,14 @@ try {
       await lastCategory.focus();
       await expect(lastCategory).toBeInViewport();
     }
-    await page.getByRole("link", { name: "Mua sắm ngay", exact: true }).click();
+    await page.locator('.storefront-home a[href="/shop"]').click();
     await expect(page).toHaveURL(/\/shop$/);
     await visit("shop", "/shop", width);
     const cards = page.locator(".product-card");
     if (await cards.count()) {
-      const name = await cards.first().locator("h3").innerText();
+      const available = cards.filter({ has: page.getByRole("button", { name: "Thêm vào giỏ", exact: true }) });
+      const target = (await available.count()) ? available.first() : cards.first();
+      const name = await target.locator("h3").innerText();
       await page.getByLabel("Tìm sản phẩm hoặc dịch vụ", { exact: true }).fill("không có mẫu kiểm tra giao diện 918273");
       await expect(page.getByRole("heading", { name: "Chưa có mặt hàng phù hợp", exact: true })).toBeVisible();
       await page.getByRole("button", { name: "Xem tất cả mặt hàng", exact: true }).click();
@@ -41,7 +43,7 @@ try {
       const card = page.locator(".product-card").first();
       const path = await card.locator(".product-photo").getAttribute("href");
       const add = card.getByRole("button", { name: "Thêm vào giỏ", exact: true });
-      if (await add.isEnabled()) {
+      if ((await add.count()) && (await add.isEnabled())) {
         await add.click();
         await expect(card.getByRole("status")).toContainText("Đã thêm");
         await expect.poll(() => page.locator(".buyer-cart-count").innerText()).not.toBe("0");

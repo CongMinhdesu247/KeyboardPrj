@@ -748,7 +748,7 @@ ul {
   font-size: 14px;
   text-decoration: underline;
   padding: 6px 0;
-  min-height: 36px;
+  min-height: 44px;
 }
 .line-price {
   text-align: right;
@@ -1726,7 +1726,8 @@ body:has(.admin-shell) > .mobile-nav {
   gap: 20px;
   align-items: start;
 }
-.admin-recent-list > a {
+.admin-recent-list > a,
+.admin-recent-list > div {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1738,7 +1739,8 @@ body:has(.admin-shell) > .mobile-nav {
   text-decoration: none;
   color: inherit;
 }
-.admin-recent-list > a:first-child {
+.admin-recent-list > a:first-child,
+.admin-recent-list > div:first-child {
   border-top: 0;
 }
 .admin-recent-list strong {
@@ -3071,7 +3073,7 @@ body:has(.admin-shell) > .mobile-nav {
   border: 1px solid #cbd2dc;
   border-radius: 5px;
   font: inherit;
-  font-size: 14px;
+  font-size: 16px;
 }
 .cart-row > strong {
   grid-column: 2/-1;
@@ -3085,6 +3087,7 @@ body:has(.admin-shell) > .mobile-nav {
   font-size: 14px;
   color: #a03f32;
   padding: 10px 0;
+  min-height: 44px;
   cursor: pointer;
 }
 .cart-summary {
@@ -3363,7 +3366,13 @@ input:focus-visible, textarea:focus-visible, select:focus-visible { outline-offs
 .admin-nav-group { display: grid; gap: 3px; min-width: 0; }
 .admin-nav-label { color: var(--admin-muted); font-size: 12.5px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.04em; padding: 0 12px 6px; }
 .admin-recent-list > a:hover { background: #f8fafc; }
-.admin-recent-list > a > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.admin-recent-list > a > span:first-child,
+.admin-recent-list > div > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.admin-recent-list > div > span:last-child { min-width: 0; text-align: right; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .admin-recent-list > div { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .admin-recent-list > div > span:last-child { text-align: left; }
+}
 .admin-recent-meta { flex-shrink: 1; }
 .catalog-item-heading { align-items: center; }
 .admin-workspace .catalog-item-heading h2 { margin-top: 6px; }
